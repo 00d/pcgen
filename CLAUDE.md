@@ -57,6 +57,7 @@ Build logic is split across `code/gradle/*.gradle` (plugins, distribution, repor
 - Checkstyle, PMD, and SpotBugs (with findsecbugs) configs live under `code/standards/`. Line length cap is 201; newline at EOF required.
 - Some build repos use `allowInsecureProtocol = true` (HTTP). Do not change without coordinating with maintainers.
 - Headless test setup (TestFX/Monocle, JavaFX module path, asserts on, 1024m heap, `maxParallelForks=1`) is applied to Test tasks — don't replicate it ad hoc.
+- **Plugin loading in tests goes through `@ExtendWith(PCGenTestEnvironment.class)`** (`code/src/testcommon/pcgen/test/PCGenTestEnvironment.java`) — a JUnit 5 extension that calls `Main.createLoadPluginTask().run()` exactly once per JVM. Don't hand-roll plugin loading in new tests; `AbstractCharacterTestCase` / `AbstractJunit5CharacterTestCase` already inherit it. It is intentionally **opt-in**: plugin loading populates the global `PluginFunctionLibrary`, which every newly constructed `VariableContext` snapshots at construction time, so tests that depend on an empty function library (e.g. `SetSolverManagerTest`) must NOT extend it. The extension does not load game data — tests that need real data (e.g. `DataTest`, `DataLoadTest`) still drive `GameModeFileLoader` / `CampaignFileLoader` themselves.
 
 ## Running quick scenarios
 
